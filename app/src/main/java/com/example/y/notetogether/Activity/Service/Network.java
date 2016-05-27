@@ -1,5 +1,7 @@
-package com.example.y.notetogether.Activity;
-import java.util.logging.Level;
+package com.example.y.notetogether.Activity.Service;
+
+import com.example.y.notetogether.Activity.DB.Contents;
+
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -10,6 +12,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class Network {
     private static Network network;
     private UserProxy userProxy;
+    private GroupProxy groupProxy;
+    private ContentsProxy contentsProxy;
     private Retrofit retrofit;
     public static Network getNetworkInstance() {
         if(network == null) {
@@ -24,6 +28,8 @@ public class Network {
                 .client(httpClient.build())
                 .build();
         userProxy = new UserProxy(retrofit);
+        contentsProxy = new ContentsProxy(retrofit);
+        groupProxy = new GroupProxy(retrofit);
     }
 
     public UserProxy getRegisterProxy() {
@@ -33,4 +39,8 @@ public class Network {
     public UserProxy getUserProxy() {
         return userProxy;
     }
+    public GroupProxy getGroupProxy(){
+        return groupProxy;
+    }
+    public ContentsProxy RegisterContentsProxy() { return contentsProxy;}
 }

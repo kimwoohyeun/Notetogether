@@ -1,4 +1,4 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.DB;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

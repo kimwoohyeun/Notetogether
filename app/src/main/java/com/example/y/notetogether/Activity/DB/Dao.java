@@ -1,10 +1,9 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.DB;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.widget.EditText;
 
 import java.util.ArrayList;
 

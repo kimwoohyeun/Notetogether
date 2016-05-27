@@ -18,20 +18,29 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".Activity.LoadingActivity"
+            android:name=".Activity.Etc.LoadingActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
-        <activity android:name=".Activity.MemoActivity">
+        <activity android:name=".Activity.Single.MemoActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.MemoActivity2" />
+        <activity android:name=".Activity.Single.MemoActivity2" />
         <activity
-            android:name=".Activity.LoginActivity"
+            android:name=".Activity.Login.LoginActivity"
             android:label="@string/title_activity_login"></activity>
-        <activity android:name=".Activity.Register1Activity"/>
+        <activity android:name=".Activity.Login.Register1Activity"/>
+        <activity android:name=".Activity.Multie.MemoGroupActivity"/>
+        <!-- [naveroauthlogin][start] 네이버아이디로로그인을 사용하기 위해서 넣어줘야하는 부분 -->
+        <activity
+            android:name="com.nhn.android.naverlogin.ui.OAuthLoginActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity
+            android:name="com.nhn.android.naverlogin.ui.OAuthLoginInAppBrowserActivity"
+            android:label="OAuth2.0 In-app" />
+        <!-- [naveroauthlogin][end] -->
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />

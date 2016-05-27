@@ -1,9 +1,8 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.Single;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,15 +17,28 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
+import android.widget.Toast;
 
+import com.example.y.notetogether.Activity.DB.ContentBoardAdapter;
+import com.example.y.notetogether.Activity.DB.Contents;
+import com.example.y.notetogether.Activity.DB.Dao;
+import com.example.y.notetogether.Activity.Etc.LoadingActivity;
+import com.example.y.notetogether.Activity.Login.LoginActivity;
+import com.example.y.notetogether.Activity.Multie.MemoGroupActivity;
+import com.example.y.notetogether.Activity.Service.Network;
+import com.example.y.notetogether.Activity.Service.User;
+import com.example.y.notetogether.Activity.Service.UserProxy;
 import com.example.y.notetogether.R;
 import com.facebook.FacebookSdk;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.logging.Handler;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener{
     private ImageView img_login;
@@ -48,13 +60,16 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private String time;
     private EditText content;
     private Button send;
-    private Button exit;
+    private View exit;
     private int color=4;
     private Button Btn_color1;
     private Button Btn_color2;
     private Button Btn_color3;
     private Button Btn_color4;
     private Button Btn_color5;
+    public ContentBoardAdapter contentBoardAdapter;
+    private UserProxy userProxy;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         startActivity(new Intent(this, LoadingActivity.class));//로딩화면
@@ -62,6 +77,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         //페이스북 연동
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_memo);
+        //세션유지
+        Network network = Network.getNetworkInstance();
+        userProxy = network.getUserProxy();
+        String sessionKey = getSessionKey();
+        if (!sessionKey.equals("ERROR")) {
+            sessionLogin(sessionKey);
+        }
         //레이아웃 아이디 설정
         cardview = (LinearLayout)findViewById(R.id.cardview_main);
         inflate = (LinearLayout)findViewById(R.id.settinginflate_main);
@@ -72,7 +94,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayoutManager layoutManager=new LinearLayoutManager(getApplicationContext());
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
-
+        //메모 백업
         //리스트에 어뎁터 삽입
         final ContentBoardAdapter contentBoardAdapter = new ContentBoardAdapter(this,dao.getContents(),R.layout.activity_memo);
         recyclerView.setAdapter(contentBoardAdapter);
@@ -98,6 +120,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         if(editbtn_condition==0) {
             serch.setVisibility(View.GONE);
         }
+
         //검색 필터링
         textView_serch = (EditText)findViewById(R.id.textView_main_serch);
         textView_serch.addTextChangedListener(new TextWatcher() {
@@ -118,6 +141,38 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 recyclerView.setAdapter(contentBoardAdapter);
             }
         });
+    }
+    //세션설정
+    public String getSessionKey() {
+        SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
+        return pref.getString("SessionKey", "ERROR");
+    }
+    public void sessionLogin(String sessionKey) {
+        try {
+            userProxy.loginBySession(sessionKey, new Callback<User>() {
+                @Override
+                public void onResponse(Call<User> call, Response<User> response) {
+                    if (response.isSuccessful()) {
+                        handleResponse(response.body());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<User> call, Throwable t) {
+                    Toast.makeText(MemoActivity.this, "Network error1", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (IOException e) {
+            Toast.makeText(MemoActivity.this, "Network error2", Toast.LENGTH_SHORT).show();
+            Log.e("MainActivity", e.toString());
+        }
+    }
+
+    private void handleResponse(User user) {
+        Intent intent = new Intent(this, MemoGroupActivity.class);
+        //intent.putExtra("User", user);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -207,8 +262,47 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intent);
                 break;
             }
+            case R.id.relative_backup : {
+                Network network = Network.getNetworkInstance();
+                try {
+                    network.RegisterContentsProxy().setContentlist(contentBoardAdapter.contentList, new Callback<String>() {
+                        @Override
+                        public void onResponse(Call<String> call, Response<String> response) {
+                            if (response.isSuccessful()) {
+                                handleResponse(response.body());
+                            } else {
+                                //         handleResponse(response.body());
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<String> call, Throwable t) {
+                            Toast.makeText(MemoActivity.this, "response 에러", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MemoActivity.this, "Exception 에러", Toast.LENGTH_SHORT).show();
+                }
+
+                break;
+            }
         }
     }
+    //백업 핸들러
+    public void handleResponse(String responseBody) {
+        Log.i("login", responseBody);
+        if (responseBody.equals("Create User Success")) {
+            Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
+        }else if(responseBody.equals("ID Already EXIST")){
+            Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
+        }else {
+            Log.i("login", "" + responseBody.equals("Login Success"));
+            Toast.makeText(this, responseBody , Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+    //홈으로 돌아가는 함수
     private void open_home_inflateLayout(){
         if(homebtn_condition==0){
             Intent intent = new Intent(this, MemoActivity2.class);
@@ -217,6 +311,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
             homebtn_condition = 1;
         }
     }
+    //새 메모 만들기 함수
     private void open_new_inflateLayout(){
         homebtn_condition=0;
         inflate.removeAllViews();
@@ -241,7 +336,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         SimpleDateFormat sdfNow = new SimpleDateFormat("yyyy/MM/dd");
         time = sdfNow.format(date);
         content = (EditText)findViewById(R.id.memo_write_EditText_content);
-        exit = (Button)findViewById(R.id.btn_Write_exit);
+        exit = (View)findViewById(R.id.btn_Write_exit);
         exit.setOnClickListener(this);
         send = (Button)findViewById(R.id.btn_Write_send);
         send.setOnClickListener(this);
@@ -260,7 +355,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private Contents exportContents(){
         return new Contents(content.getText().toString().substring(0,content.getText().toString().length()), time, content.getText().toString(), color);
     }
-
+    //세팅 함수
     private void open_setting_inflateLayout(){
         homebtn_condition = 0;
         inflate.removeAllViews();
@@ -278,6 +373,12 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         //로그인 버튼 설정
         img_login = (ImageView)findViewById(R.id.img_login);
         img_login.setOnClickListener(this);
+
+        //백업 버튼 설정
+        RelativeLayout Relative_Backup = (RelativeLayout)inflate.findViewById(R.id.relative_backup);
+        Relative_Backup.setOnClickListener(this);
+
+
     }
     private void open_serch_inflateLayout(){
         recyclerView.setVisibility(View.VISIBLE);

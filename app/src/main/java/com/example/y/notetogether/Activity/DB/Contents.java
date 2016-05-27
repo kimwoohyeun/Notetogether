@@ -1,4 +1,4 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.DB;
 
 /**
  * Created by y on 2016-03-22.

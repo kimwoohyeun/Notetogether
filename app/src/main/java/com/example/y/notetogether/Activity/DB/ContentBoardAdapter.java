@@ -1,27 +1,18 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.DB;
 
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,7 +20,6 @@ import android.widget.Toast;
 import com.example.y.notetogether.R;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -38,14 +28,11 @@ import java.util.Locale;
 public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapter.ViewHolder> {
     private Context context;
     private Dao dao;
-    private ArrayList<Contents> contentList;
+    public static ArrayList<Contents> contentList;
     private ArrayList<Contents> arraylist;//검색기능을 위한 리스트공간 생성
     private int edit_btn_state=1;
     int item_layout;
-
     private int fullHeight;
-
-
     public ContentBoardAdapter(Context context, ArrayList<Contents> contentList, int item_layout) {
         this.contentList = contentList;
         this.context = context;

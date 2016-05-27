@@ -1,4 +1,4 @@
-package com.example.y.notetogether.Activity;
+package com.example.y.notetogether.Activity.Etc;
 
 import android.app.Activity;
 import android.os.Bundle;
