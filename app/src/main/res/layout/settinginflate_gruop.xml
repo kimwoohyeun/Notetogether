@@ -79,7 +79,7 @@
         android:layout_weight="1"
         android:background="#FFFFFF"
         android:layout_marginTop="0.5dp"
-        android:id="@+id/relative_backup">
+        android:id="@+id/relative_group_backup">
 
         <ImageView
             android:layout_width="30dp"

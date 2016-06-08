@@ -53,6 +53,7 @@ public class MemoActivity2 extends AppCompatActivity implements View.OnClickList
     private int editbtn_condition = 0;
     private int homebtn_condition = 0;
     private ImageView img_login;
+    private RelativeLayout relative_login;
     //new Activity
     private String time;
     private EditText content;
@@ -182,6 +183,11 @@ public class MemoActivity2 extends AppCompatActivity implements View.OnClickList
         switch(v.getId())
         {
             case R.id.img_login : {
+                Intent intent = new Intent(this, LoginActivity.class);
+                startActivity(intent);
+                break;
+            }
+            case R.id.relative_login : {
                 Intent intent = new Intent(this, LoginActivity.class);
                 startActivity(intent);
                 break;
@@ -360,6 +366,9 @@ public class MemoActivity2 extends AppCompatActivity implements View.OnClickList
         //로그인 버튼 설정
         img_login = (ImageView)findViewById(R.id.img_login);
         img_login.setOnClickListener(this);
+        //릴레이티브 로그인버튼 설정
+        relative_login = (RelativeLayout)findViewById(R.id.relative_login);
+        relative_login.setOnClickListener(this);
         //백업 버튼 설정
         RelativeLayout Relative_Backup = (RelativeLayout)inflate.findViewById(R.id.relative_backup);
         Relative_Backup.setOnClickListener(this);
@@ -374,4 +383,5 @@ public class MemoActivity2 extends AppCompatActivity implements View.OnClickList
         Btn_new.setBackground(getResources().getDrawable(R.drawable.new_gray));
         Btn_home.setBackground(getResources().getDrawable(R.drawable.memohome_gray));
     }
+
 }

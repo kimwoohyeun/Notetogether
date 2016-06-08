@@ -1,0 +1,14 @@
+var express = require('express');
+var router = express.Router();
+var db = require('./database');
+router.get('/', function (req, res) {
+    res.sendfile('index.html');
+});
+
+router.post('/api/photo', function (req, res) {
+    if (done == true) {
+        console.log(req.files);
+        res.end("File uploaded.\n" + JSON.stringify(req.files));
+    }
+});
+module.exports = router;

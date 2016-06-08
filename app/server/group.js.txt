@@ -1,0 +1,197 @@
+var express = require('express');
+var router = express.Router();
+var db = require('./database');
+router.post('/makeroom',function(req,res)
+{
+	req.accepts('application/json');
+	console.log(req.body);
+	var sessionKey = req.body.sessionKey;
+	var userId;
+	var name = req.body.roomName;
+	db.get().query('SELECT userId FROM session WHERE sessionKey = ?', sessionKey, function(err, result) {
+		if(err) {
+			console.log(err);
+		}else {
+			userId = result[0].userId;
+			console.log("방 생성 요청한 userId : "+userId);
+			
+			}
+	});
+	db.get().query('SELECT * FROM groupp WHERE name = ?', name, function(err, result){	
+		if(err) {
+			console.log(err);
+			res.send(JSON.stringify(err));
+		}else if (result.length < 1) {
+			insertGroup(name, res);
+			return;
+		}else {
+			res.send(JSON.stringify("Room Already EXIST"));
+			console.log("Room Already EXIST");
+		}
+	});
+	
+});
+
+router.post('/myRoom',function(req,res)
+{
+	req.accepts('application/json');
+	console.log(req.body);
+	var sessionKey = req.body.sessionKey;
+	var userId;
+	db.get().query('SELECT userId FROM session WHERE sessionKey = ?', sessionKey, function(err, result) {
+		if(err) {
+			console.log(err);
+			res.send(JSON.stringify(err));
+		}else {
+			userId = result[0].userId;
+			console.log("방 참가 요청한 userId : "+userId);
+			db.get().query('select room.userId, groupp.name from room,groupp where room.groupid = groupp._id and room.userid = ?', userId, function(err, result) {
+				if(err) {
+					console.log(err);
+					res.send(JSON.stringify(err));
+				}else {
+					var string=JSON.stringify(result);
+					var json =  JSON.parse(string);
+					console.log(json); //object
+					res.send(json);	
+				}
+			});
+		}
+	});
+});
+
+
+
+router.post('/participateRoom',function(req,res)
+{
+	req.accepts('application/json');
+	console.log(req.body);
+	var sessionKey = req.body.sessionKey;
+	var name = req.body.roomName;
+	var userId;
+	var groupId;
+	db.get().query('SELECT userId FROM session WHERE sessionKey = ?', sessionKey, function(err, result) {
+		if(err) {
+			console.log(err);
+			res.send(JSON.stringify(err));
+		}else {
+			userId = result[0].userId;
+			console.log("방 참가 요청한 userId : "+userId);
+			db.get().query('SELECT _id FROM groupp WHERE name = ?', name, function(err, result) {
+				if(err) {
+					console.log(err);
+					res.send(JSON.stringify(err));
+				}else {
+					groupId = result[0]._id;
+					console.log("방 번호 : "+groupId);
+					var Info = [
+						groupId,
+						userId
+						]
+					db.get().query('SELECT * FROM room WHERE userId = ?',userId, function(err, result){	
+						if(err) {
+							console.log(err);
+							res.send(JSON.stringify(err));
+						}else if (result.length < 1) {
+							db.get().query('INSERT INTO room(groupid,userId) VALUES(?,?)',Info, function(err, result){
+								if(err) {
+									console.log(err);
+									res.send(JSON.stringify(err));
+								}else {
+									console.log(result);
+									res.send(JSON.stringify("Participate Room Success"));
+								}
+							});
+						}else {
+							var length = result.length;
+							var count=0;
+							for(var i=0;i<length;i++){
+
+								if(result[i].groupid === groupId){
+									count++;
+								}
+					
+							}	
+							if(count===0){
+								db.get().query('INSERT INTO room(groupid,userId) VALUES(?,?)',Info, function(err, result){
+									if(err) {
+										console.log(err);
+										res.send(JSON.stringify(err));
+									}else {
+										console.log(result);
+										res.send(JSON.stringify("Participate Room Success"));
+									}
+								});
+							}
+							else{
+								res.send(JSON.stringify("Already Participating"));
+								console.log("Already Participating");
+							}	
+						}
+					});
+				}
+			});
+		}
+	});	
+});
+
+
+router.get('/searchroom',function(req, res)
+{
+	db.get().query('SELECT name FROM groupp',  function(err, rows){
+		if(err){
+			console.log("searchroom error");
+		}
+		else{
+			var string=JSON.stringify(rows);
+			var json =  JSON.parse(string);
+			console.log(json); //object
+			res.send(json);	
+		}
+	});	
+
+	
+});
+
+
+
+router.get('/searchcount',function(req, res)
+{
+	db.get().query('SELECT groupid,count(*) AS "count" FROM room group by groupid ',  function(err, rows){
+		if(err){
+			console.log("searchcount error");
+		}
+		else{
+			var string=JSON.stringify(rows);
+			var json =  JSON.parse(string);
+			console.log(json); //object
+			res.send(json);	
+		}
+	});	
+
+	
+});
+
+function insertGroup(name, res) {
+	db.get().query('INSERT INTO groupp(name) VALUES(?)',name, function(err, result){
+		if(err) {
+			console.log(err);
+		}else {
+			console.log(result);
+			makeGroup(result.insertId);
+			console.log("Create Room Success");
+			res.send(JSON.stringify("Create Room Success"));
+		}
+		
+	});
+}
+function makeGroup(id) { 
+	db.get().query('INSERT INTO groupclient(groupid) VALUES(?)', id, function(err, result) {
+		if (err) {
+			console.log(err);
+		}else {
+			console.log("make Group Id : " + result.insertId + " Success");
+		}
+	}); 
+}
+module.exports = router;

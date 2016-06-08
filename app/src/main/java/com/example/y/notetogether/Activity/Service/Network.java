@@ -1,5 +1,7 @@
 package com.example.y.notetogether.Activity.Service;
 
+import android.media.Image;
+
 import com.example.y.notetogether.Activity.DB.Contents;
 
 import okhttp3.OkHttpClient;
@@ -13,6 +15,7 @@ public class Network {
     private static Network network;
     private UserProxy userProxy;
     private GroupProxy groupProxy;
+    private ImageProxy imageProxy;
     private ContentsProxy contentsProxy;
     private Retrofit retrofit;
     public static Network getNetworkInstance() {
@@ -30,6 +33,7 @@ public class Network {
         userProxy = new UserProxy(retrofit);
         contentsProxy = new ContentsProxy(retrofit);
         groupProxy = new GroupProxy(retrofit);
+        imageProxy = new ImageProxy(retrofit);
     }
 
     public UserProxy getRegisterProxy() {
@@ -43,4 +47,5 @@ public class Network {
         return groupProxy;
     }
     public ContentsProxy RegisterContentsProxy() { return contentsProxy;}
+    public ImageProxy getImageProxy() { return imageProxy;}
 }

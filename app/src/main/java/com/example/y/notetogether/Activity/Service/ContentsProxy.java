@@ -3,7 +3,13 @@ package com.example.y.notetogether.Activity.Service;
 import android.util.Log;
 
 import com.example.y.notetogether.Activity.DB.Contents;
+import com.example.y.notetogether.Activity.DB.Contentsss;
 import com.example.y.notetogether.Activity.DB.Dao;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,8 +43,10 @@ public class ContentsProxy {
         Call<String> call = service.setcontents(contentses.getTitle(),contentses.getContent(),contentses.getTime(),contentses.getColor());
         call.enqueue(callback);
     }
-    public void setContentlist(ArrayList<Contents> contentses, Callback<String> callback) throws IOException {
-        Call<String> call = service.setcontentlist(contentses);
+    public void setContentlist(List<Contents> contentses, Callback<String> callback) throws IOException {
+        Gson gson = new Gson();
+        JsonObject contentsss = (JsonObject) gson.toJsonTree(new Contentsss(contentses));
+        Call<String> call = service.setcontentlist(contentsss);
         call.enqueue(callback);
     }
 }

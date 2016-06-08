@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
     public static ArrayList<Contents> contentList;
     private ArrayList<Contents> arraylist;//검색기능을 위한 리스트공간 생성
     private int edit_btn_state=1;
+    private ViewHolder preholder=null;
     int item_layout;
     private int fullHeight;
     public ContentBoardAdapter(Context context, ArrayList<Contents> contentList, int item_layout) {
@@ -81,27 +83,45 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
         holder.cardview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleCardView(holder);
-                if (holder.content.getVisibility() == View.VISIBLE)
+                holder.btn_edit.setTextColor(Color.parseColor("#FFFFFF"));
+                holder.btn_edit.setTextSize(TypedValue.COMPLEX_UNIT_SP,12);
+                holder.btn_finish.setTextColor(Color.parseColor("#FFFFFF"));
+                holder.btn_finish.setTextSize(TypedValue.COMPLEX_UNIT_SP,12);
+                if(holder.state==false)
                 {
-                    holder.content.setVisibility(View.INVISIBLE);
-                    holder.btn_edit.setVisibility(View.INVISIBLE);
-                    holder.title.setTextColor(Color.parseColor("#FF9800"));
-                    holder.time.setTextColor(Color.parseColor("#FF9800"));
+                    if(preholder!=null) {
+                        if(preholder.state==true) {
+                            toggleCardView(preholder);
+                            preholder.content.setVisibility(View.INVISIBLE);
+                            preholder.btn_edit.setVisibility(View.INVISIBLE);
+                            preholder.btn_finish.setVisibility(View.INVISIBLE);
+                            preholder.content.setEnabled(false);
+                            preholder.state=false;
+                            preholder=null;
+                        }
+                    }
+                    holder.btn_edit.setText("수정");
+                    holder.content.setVisibility(View.VISIBLE);
+                    holder.btn_edit.setVisibility(View.VISIBLE);
+                    holder.content.setEnabled(false);
+                    toggleCardView(holder);
+                    holder.state=true;
+                    preholder=holder;
                 }
                 else
                 {
-                    holder.content.setVisibility(View.VISIBLE);
-                    holder.btn_edit.setVisibility(View.VISIBLE);
-                    //holder.title.setTextColor(Color.parseColor("#FF9800"));
-                    //holder.time.setTextColor(Color.parseColor("#FF9800"));
+                    toggleCardView(holder);
+                    holder.state = false;
+                    holder.content.setVisibility(View.INVISIBLE);
+                    holder.btn_edit.setVisibility(View.INVISIBLE);
+                    holder.btn_finish.setVisibility(View.INVISIBLE);
+                    preholder=null;
                 }
-                holder.content.setEnabled(false);
-                //수정버튼
+                //수정 버튼
                 holder.btn_edit.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View v) {
-                       // if(holder.btn_edit.getText().toString()=="수정")
+
                         if(edit_btn_state==1)
                         {
                             edit_btn_state=0;
@@ -110,7 +130,7 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
                             holder.btn_finish.setVisibility(View.VISIBLE);
 
                         }
-                        //else if(holder.btn_edit.getText().toString()=="취소"){
+
                         else{
                             holder.content.setEnabled(false);
                             holder.btn_finish.setVisibility(View.INVISIBLE);
@@ -119,6 +139,7 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
                         }
                     }
                 });
+                //완료버튼
                 holder.btn_finish.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(final View v) {
@@ -132,12 +153,12 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 toggleCardView(holder);
+                                edit_btn_state=1;
+                                holder.state = false;
                                 holder.btn_edit.setText("수정");
-                                holder.content.setVisibility(View.INVISIBLE);
                                 holder.btn_edit.setVisibility(View.INVISIBLE);
                                 holder.btn_finish.setVisibility(View.INVISIBLE);
-                                //holder.title.setTextColor(Color.parseColor("#FF9800"));
-                                //holder.time.setTextColor(Color.parseColor("#FF9800"));
+                                preholder = holder;
                                 dao = new Dao(context);
                                 dao.update(item.getId(),holder.content.getText().toString());
                                 Toast.makeText(context, "메세지가 수정되었습니다", Toast.LENGTH_SHORT).show();
@@ -157,6 +178,7 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
                 });
             }
         });
+
 
         //메세지 삭제 => DB접근
         holder.cardview.setOnLongClickListener(new View.OnLongClickListener() {
@@ -252,6 +274,7 @@ public class ContentBoardAdapter extends RecyclerView.Adapter<ContentBoardAdapte
         Button btn_edit;
         Button btn_finish;
         ScrollView scrollView;
+        Boolean state = false;
 
         public ViewHolder(View itemView) {
             super(itemView);

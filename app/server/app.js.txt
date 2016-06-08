@@ -1,0 +1,55 @@
+var express = require('express');
+var multer = require('multer');
+var done = false;
+var app = express();
+var morgan = require('morgan');
+var bodyParser = require('body-parser').urlencoded({extended: true});
+var user_route = require('./user');
+var memo_route = require('./memo');
+var file_route = require('./file');
+var uploads_route = require('./uploads');
+var group_route = require('./group'); 
+var db = require('./database');
+db.createPool();
+app.use(morgan('combined'));
+app.use(bodyParser);
+app.use('/uploads', uploads_route);
+app.use('/user', user_route);
+app.use('/file', file_route);
+app.use('/memo', memo_route);
+app.use('/group', group_route);
+app.set('port', process.env.port || 8000);
+app.use(multer({
+    dest: './uploads/',
+    rename: function (fieldname, filename) {
+	//return filname + Data.now();
+        return Date.now();
+    },
+    onFileUploadStart: function (file) {
+        console.log(file.originalname + ' is starting ...')
+    },
+    onFileUploadComplete: function (file) {
+        console.log(file.fieldname + ' uploaded to  ' + file.path)
+        done = true;
+    }
+}));
+app.use(function (req, res) {
+    res.type('text/plain');
+    res.status('404');
+    res.send('404 - Not Found');
+});
+
+app.use(function (err, req, res, next) {
+    console.error(err.stack)
+    res.type('text/plain');
+    res.status('500');
+    res.send('500 - Server Error');
+});
+
+
+
+
+app.listen(app.get('port'), function () {
+    console.log('Express Started on http://localhost:' + app.get('port') +'\n' +'press Ctrl + C to exit');
+});
+

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -27,9 +28,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.y.notetogether.Activity.DB.ContentBoardAdapter;
+import com.example.y.notetogether.Activity.DB.ContentCountDB;
+import com.example.y.notetogether.Activity.DB.ContentDB;
+import com.example.y.notetogether.Activity.DB.ContentMyroomDB;
 import com.example.y.notetogether.Activity.DB.Contents;
 import com.example.y.notetogether.Activity.DB.Dao;
+import com.example.y.notetogether.Activity.FileupLoad.UploadActivity;
 import com.example.y.notetogether.Activity.Login.LoginActivity;
+import com.example.y.notetogether.Activity.Service.GroupProxy;
 import com.example.y.notetogether.Activity.Service.Network;
 import com.example.y.notetogether.Activity.Service.User;
 import com.example.y.notetogether.Activity.Service.UserProxy;
@@ -40,9 +46,9 @@ import com.facebook.FacebookSdk;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -56,6 +62,7 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
         private Button Btn_edit;
         private Button Btn_setting;
         private Button Btn_mode;
+        private int btn_mode = 0;
         private Button Btn_home;
         private Button Btn_logout;
         private TextView Text_email;
@@ -82,8 +89,11 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
         private Button Btn_color5;
         private Button Btn_room;
         private Button Btn_roomsearch;
+        private Button Btn_fileupload;
         private User user;
+        private ArrayList<RoomContents> contentList;
         private UserProxy userProxy;
+        private GroupProxy groupProxy;
         private String sessionKey;
         private RoomDialog roomDialog;
         private RoomSearchDialog roomSearchDialog;
@@ -95,7 +105,7 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
             FacebookSdk.sdkInitialize(getApplicationContext());
             setContentView(R.layout.activity_groupmemo);
             //레이아웃 아이디 설정
-            cardview = (LinearLayout)findViewById(R.id.cardview_main);
+            cardview = (LinearLayout)findViewById(R.id.cardview_group_main);
             inflate = (LinearLayout)findViewById(R.id.settinginflate_main);
             //로그인되어있는 유저 불러오기
             network = Network.getNetworkInstance();
@@ -104,8 +114,9 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
             if (!sessionKey.equals("ERROR")) {
                 sessionLogin(sessionKey);
             }
+
             //리스트 생성
-            recyclerView = (RecyclerView)findViewById(R.id.recycleView_memo);
+            recyclerView = (RecyclerView)findViewById(R.id.recycleView_group_memo);
             dao = new Dao(this);
             //카드뷰 설정
             LinearLayoutManager layoutManager=new LinearLayoutManager(getApplicationContext());
@@ -113,37 +124,13 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
             recyclerView.setLayoutManager(layoutManager);
             //네트워크 설정
             network = Network.getNetworkInstance();
+            contentList = new ArrayList<RoomContents>();
+            //네트워크 설정
+            getContents getContents = new getContents();
+            getContents.execute();
             //리스트에 어뎁터 삽입
-            final ContentBoardAdapter contentBoardAdapter = new ContentBoardAdapter(this,dao.getContents(),R.layout.activity_memo);
+           /* final ContentBoardAdapter contentBoardAdapter = new ContentBoardAdapter(this,dao.getContents(),R.layout.activity_groupmemo);
             recyclerView.setAdapter(contentBoardAdapter);
-            //방 생성 레이아웃
-            GroupRoomLayout = (LinearLayout)findViewById(R.id.GroupRoom_main);
-            //방 생성 버튼 설정
-            Btn_room = (Button)findViewById(R.id.btn_gruop_room);
-            Btn_room.setOnClickListener(this);
-            //방 검색 버튼 설정
-            Btn_roomsearch = (Button)findViewById(R.id.btn_group_roomsearch);
-            Btn_roomsearch.setOnClickListener(this);
-            //새 메모 버튼 설정
-            Btn_new = (Button)findViewById(R.id.btn_main_new);
-            Btn_new.setOnClickListener(this);
-            //수정 버튼 설정
-            Btn_edit = (Button)findViewById(R.id.btn_main_edit);
-            Btn_edit.setOnClickListener(this);
-            //세팅 버튼 설정
-            Btn_setting = (Button)findViewById(R.id.btn_main_setting);
-            Btn_setting.setOnClickListener(this);
-            //모드 버튼 설정
-            Btn_mode = (Button)findViewById(R.id.btn_main_mode);
-            Btn_mode.setOnClickListener(this);
-            //홈 버튼설정
-            Btn_home = (Button)findViewById(R.id.btn_main_home);
-            Btn_home.setOnClickListener(this);
-            //검색창, 체크박스 숨기기
-            serch = (RelativeLayout)findViewById(R.id.serchview_main);
-            if(editbtn_condition==0) {
-                serch.setVisibility(View.GONE);
-            }
             //검색 필터링
             textView_serch = (EditText)findViewById(R.id.textView_main_serch);
             textView_serch.addTextChangedListener(new TextWatcher() {
@@ -163,9 +150,112 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                     contentBoardAdapter.filter(text);
                     recyclerView.setAdapter(contentBoardAdapter);
                 }
-            });
+            });*/
+
+            //방 생성 레이아웃
+            GroupRoomLayout = (LinearLayout)findViewById(R.id.GroupRoom_main);
+            //방 생성 버튼 설정
+            Btn_room = (Button)findViewById(R.id.btn_gruop_room);
+            Btn_room.setOnClickListener(this);
+            //방 검색 버튼 설정
+            Btn_roomsearch = (Button)findViewById(R.id.btn_group_roomsearch);
+            Btn_roomsearch.setOnClickListener(this);
+            //새 메모 버튼 설정
+            Btn_new = (Button)findViewById(R.id.btn_main_new);
+            Btn_new.setOnClickListener(this);
+            //파일 업로드 버튼설정
+            Btn_fileupload = (Button)findViewById(R.id.btn_fileupload);
+            Btn_fileupload.setOnClickListener(this);
+            //수정 버튼 설정
+            Btn_edit = (Button)findViewById(R.id.btn_main_edit);
+            Btn_edit.setOnClickListener(this);
+            //세팅 버튼 설정
+            Btn_setting = (Button)findViewById(R.id.btn_main_setting);
+            Btn_setting.setOnClickListener(this);
+            //모드 버튼 설정
+            Btn_mode = (Button)findViewById(R.id.btn_main_mode);
+            Btn_mode.setOnClickListener(this);
+            //홈 버튼설정
+            Btn_home = (Button)findViewById(R.id.btn_main_home);
+            Btn_home.setOnClickListener(this);
+            //검색창, 체크박스 숨기기
+            serch = (RelativeLayout)findViewById(R.id.serchview_main);
+            if(editbtn_condition==0) {
+                serch.setVisibility(View.GONE);
+            }
+
+        }
+    private class getContents extends AsyncTask<Void,Void,Void> {
+        public ArrayList<ContentMyroomDB> myroom;
+        public ArrayList<ContentCountDB> count;
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            network = Network.getNetworkInstance();
+            count = network.getGroupProxy().getRoomCount();
+            try {
+                network.getGroupProxy().myroom(sessionKey, new Callback<ArrayList<ContentMyroomDB>>() {
+
+                    @Override
+                    public void onResponse(Call<ArrayList<ContentMyroomDB>> call, Response<ArrayList<ContentMyroomDB>> response) {
+                        if (response.isSuccessful()) {
+                            handleResponse_myroom(response.body());
+
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<ArrayList<ContentMyroomDB>> call, Throwable t) {
+                        Toast.makeText(MemoGroupActivity.this, "Myroom Failuer", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (IOException e) {
+                Toast.makeText(MemoGroupActivity.this, "Myroom Exception", Toast.LENGTH_SHORT).show();
+                Log.e("MainActivity", e.toString());
+            }
+            return null;
         }
 
+        private void handleResponse_myroom(ArrayList<ContentMyroomDB> body) {
+            for(int i=0;i<body.size();i++) {
+                            contentList.add(new RoomContents(body.get(i).getName()));
+                          }
+            for(int i=0;i<count.size();i++){
+                for(int j=0;j<body.size();j++){
+                    if(count.get(i).getGroupid()==j+1)
+                        contentList.set(j,new RoomContents(body.get(j).getName(),count.get(i).getCount()));
+                }
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+
+
+            //리스트에 어뎁터 삽입
+            final ContentBoardMyRoomAdapter contentBoardMyRoomAdapter = new ContentBoardMyRoomAdapter(getApplication(),contentList,R.layout.activity_groupmemo);
+            recyclerView.setAdapter(contentBoardMyRoomAdapter);
+            //검색 필터링
+            /*textView_serch = (EditText)findViewById(R.id.edittext_roomsearch_name);
+            textView_serch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String text = textView_serch.getText().toString().toLowerCase(Locale.getDefault());
+                    contentBoardRoomAdapter.filter(text);
+                    recyclerView.setAdapter(contentBoardRoomAdapter);
+                }
+            });*/
+        }
+    }
     private void sessionLogin(String sessionKey) {
         try {
             userProxy.loginBySession(sessionKey, new Callback<User>() {
@@ -195,6 +285,19 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
         public void onClick(View v) {
             switch(v.getId())
             {
+
+                case R.id.btn_main_mode:{
+                    if(btn_mode==0){
+                        Btn_mode.setBackground(getResources().getDrawable(R.drawable.person_orange));
+                        btn_mode=1;
+                    }
+                    else{
+                        Btn_mode.setBackground(getResources().getDrawable(R.drawable.group_orange));
+                        btn_mode=0;
+                    }
+
+                    break;
+                }
                 case R.id.btn_gruop_room:{
 
                     roomDialog = new RoomDialog(this,sessionKey);
@@ -225,6 +328,9 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                     roomSearchDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
                         public void onDismiss(DialogInterface dialog) {
+                            Intent intent = new Intent(getApplicationContext(), MemoGroupActivity.class);
+                            startActivity(intent);
+                            finish();
                         }
                     });
                     //커스텀 다이얼로그 객에체 Cancle 리스너 설정
@@ -238,7 +344,6 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                     //Dialog 자체 배경을 투명하게 하기
                     roomSearchDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     roomSearchDialog.show();
-
                     break;
                 }
 
@@ -266,6 +371,11 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                 }
                 case R.id.btn_main_home:{
                     open_home_inflateLayout();
+                    break;
+                }
+                case R.id.btn_fileupload:{
+                    Intent intent = new Intent(this, UploadActivity.class);
+                    startActivity(intent);
                     break;
                 }
                 case R.id.btn_Write_exit:{
@@ -323,6 +433,31 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                 case R.id.img_login : {
                     break;
                 }
+                case R.id.relative_group_backup:{
+                    Network network = Network.getNetworkInstance();
+                    try {
+                        network.RegisterContentsProxy().setContentlist(dao.BackupContents(), new Callback<String>() {
+                            @Override
+                            public void onResponse(Call<String> call, Response<String> response) {
+                                if (response.isSuccessful()) {
+                                    handleResponse(response.body());
+                                } else {
+                                    //         handleResponse(response.body());
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<String> call, Throwable t) {
+                                Toast.makeText(MemoGroupActivity.this, "response 에러", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(MemoGroupActivity.this, "Exception 에러", Toast.LENGTH_SHORT).show();
+                    }
+
+                    break;
+                }
                 case R.id.btn_logout :
 
                     try {
@@ -352,6 +487,7 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
                     finish();
                     break;
                 }
+
             }
 
     private void handleResponse_logout(String response) {
@@ -434,6 +570,9 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
             //로그아웃 설정
             Btn_logout = (Button)findViewById(R.id.btn_logout);
             Btn_logout.setOnClickListener(this);
+            //백업 버튼 설정
+            RelativeLayout Relative_Backup = (RelativeLayout)inflate.findViewById(R.id.relative_group_backup);
+            Relative_Backup.setOnClickListener(this);
         }
         private void open_serch_inflateLayout(){
             recyclerView.setVisibility(View.VISIBLE);
@@ -449,6 +588,15 @@ public class MemoGroupActivity extends AppCompatActivity implements View.OnClick
     public String getSessionKey() {
         SharedPreferences pref = getSharedPreferences("pref", MODE_PRIVATE);
         return pref.getString("SessionKey", "ERROR");
+    }
+    //백업 핸들러
+    public void handleResponse(String responseBody) {
+        if(responseBody.equals("Back Up Success")){
+            Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
+        }else {
+            Log.i("login", "" + responseBody.equals("Error"));
+            Toast.makeText(this, responseBody , Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

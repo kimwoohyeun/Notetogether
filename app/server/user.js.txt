@@ -1,0 +1,120 @@
+var express = require('express');
+var router = express.Router();
+var db = require('./database');
+var uuid = require('node-uuid');
+router.post('/create',function(req,res)
+{
+	req.accepts('application/json');
+	console.log(req.body);
+	var userInfo = [
+		req.body.email,
+		req.body.password
+	]
+	console.log(userInfo);
+	db.get().query('SELECT * FROM user WHERE email = ?', req.body.email, function(err, result){	
+		if(err) {
+			console.log(err);
+			res.send(JSON.stringify(err));
+		}else if (result.length < 1) {
+			insertUser(userInfo, res)
+			return;
+		}else {
+			res.send(JSON.stringify("Email Already EXIST"));
+			console.log("Email Already EXIST");
+		}
+	});
+});
+function insertUser(userInfo, res) {
+	db.get().query('INSERT INTO user(email, password) VALUES(?, ?)',userInfo, function(err, result){
+		if(err) {
+			console.log(err);
+		}else {
+			console.log(result);
+			makeClient(result.insertId);
+			console.log("Create User Success");
+			res.send(JSON.stringify("Create User Success"));
+		}
+		
+	});
+}
+function makeClient(id) { 
+	db.get().query('INSERT INTO client(userid) VALUES(?)', id, function(err, result) {
+		if (err) {
+			console.log(err);
+		}else {
+			console.log("make Client Id : " + result.insertId + " Success");
+		}
+	});
+}
+router.post('/login', function(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+	db.get().query('SELECT * FROM user WHERE email = ?', email, function(err, result){
+		if(err) {
+			console.log(err);
+		} else if(result.length < 1) {
+			res.send(JSON.stringify("NO Email EXIST"));
+			console.log("NO Email EXIST");
+		} else {
+			if (password === result[0].password) {
+				var sessionKey = uuid.v1();
+				var insert = [sessionKey, result[0]._id];
+				db.get().query('INSERT INTO session(sessionKey, userId) VALUES(?, ?) ',insert,function(err,result){
+					if(err){
+							console.log(err);
+					}else {
+							console.log(sessionKey);
+							var responseBody = {
+								status : "Login_Success",
+								sessionKey : sessionKey
+							}
+							res.send(JSON.stringify(responseBody));
+						}
+				});
+			}else {
+				res.send(JSON.stringify("Wrong Password"));
+				console.log("Wrong Password");
+			}
+
+		}
+	});		
+});
+
+router.post('/sessionLogin',function(req, res) {
+	var sessionKey = req.body.sessionKey;
+
+	db.get().query('SELECT userId FROM session WHERE sessionKey = ?', sessionKey, function(err, result) {
+		if(err) {
+			console.log(err);
+		}else {
+			db.get().query('SELECT * FROM user WHERE _id = ?', result[0].userId, function(err, result){
+				if(err) {
+					console.log(err);
+				}else {
+					res.send(JSON.stringify(result[0]));
+					console.log('Session Success');
+				}
+			});
+		}
+	});
+});
+router.post('/sessionLogout',function(req, res) {
+	var sessionKey = req.body.sessionKey;
+	console.log("logout request");
+	console.log(sessionKey); 
+	db.get().query('DELETE FROM session WHERE sessionKey = ?', sessionKey, function(err, result) {
+		if(err) {
+			console.log(err);
+		}else {
+			console.log("LOGOUT_SUCESS");
+			res.send(JSON.stringify("LOGOUT_SUCESS"));
+		}
+	
+	});
+});
+module.exports = router;
+
+
+
+
+

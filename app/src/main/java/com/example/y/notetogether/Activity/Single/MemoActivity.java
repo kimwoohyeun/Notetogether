@@ -30,6 +30,7 @@ import com.example.y.notetogether.Activity.Service.User;
 import com.example.y.notetogether.Activity.Service.UserProxy;
 import com.example.y.notetogether.R;
 import com.facebook.FacebookSdk;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -47,6 +48,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private Button Btn_setting;
     private Button Btn_mode;
     private Button Btn_home;
+    private RelativeLayout relative_login;
     private EditText textView_serch;
     private RecyclerView recyclerView;
     private Dao dao;
@@ -67,6 +69,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private Button Btn_color3;
     private Button Btn_color4;
     private Button Btn_color5;
+    private String sessionKey;
     public ContentBoardAdapter contentBoardAdapter;
     private UserProxy userProxy;
 
@@ -80,7 +83,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         //세션유지
         Network network = Network.getNetworkInstance();
         userProxy = network.getUserProxy();
-        String sessionKey = getSessionKey();
+        sessionKey = getSessionKey();
         if (!sessionKey.equals("ERROR")) {
             sessionLogin(sessionKey);
         }
@@ -115,6 +118,7 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         //홈 버튼설정
         Btn_home = (Button)findViewById(R.id.btn_main_home);
         Btn_home.setOnClickListener(this);
+
         //검색창, 체크박스 숨기기
         serch = (RelativeLayout)findViewById(R.id.serchview_main);
         if(editbtn_condition==0) {
@@ -262,10 +266,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intent);
                 break;
             }
+            case R.id.relative_login : {
+                Intent intent = new Intent(this, LoginActivity.class);
+                startActivity(intent);
+                break;
+            }
             case R.id.relative_backup : {
                 Network network = Network.getNetworkInstance();
                 try {
-                    network.RegisterContentsProxy().setContentlist(contentBoardAdapter.contentList, new Callback<String>() {
+                    network.RegisterContentsProxy().setContentlist(dao.BackupContents(), new Callback<String>() {
                         @Override
                         public void onResponse(Call<String> call, Response<String> response) {
                             if (response.isSuccessful()) {
@@ -295,6 +304,10 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         if (responseBody.equals("Create User Success")) {
             Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
         }else if(responseBody.equals("ID Already EXIST")){
+            Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
+        }else if(responseBody.equals("Back Up Success")){
+            Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
+        }else if(responseBody.equals("Try Login")){
             Toast.makeText(this, responseBody, Toast.LENGTH_SHORT).show();
         }else {
             Log.i("login", "" + responseBody.equals("Login Success"));
@@ -373,7 +386,9 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         //로그인 버튼 설정
         img_login = (ImageView)findViewById(R.id.img_login);
         img_login.setOnClickListener(this);
-
+        //릴레이티브 로그인버튼 설정
+        relative_login = (RelativeLayout)findViewById(R.id.relative_login);
+        relative_login.setOnClickListener(this);
         //백업 버튼 설정
         RelativeLayout Relative_Backup = (RelativeLayout)inflate.findViewById(R.id.relative_backup);
         Relative_Backup.setOnClickListener(this);
@@ -390,4 +405,6 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         Btn_new.setBackground(getResources().getDrawable(R.drawable.new_gray));
         Btn_home.setBackground(getResources().getDrawable(R.drawable.memohome_gray));
     }
+
 }
+

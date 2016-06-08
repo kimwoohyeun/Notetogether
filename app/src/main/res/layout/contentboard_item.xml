@@ -73,30 +73,33 @@
             </ScrollView>
 
             <Button
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:text="수정"
-                android:id="@+id/btn_contentBoard_edit"
-                android:textSize="10dp"
-                android:visibility="invisible"
-                android:background="#FFFFFF"
-                android:layout_alignTop="@+id/btn_contentBoard_finish"
-                android:layout_toLeftOf="@+id/btn_contentBoard_finish"
-                android:layout_toStartOf="@+id/btn_contentBoard_finish"
-                android:layout_marginLeft="10dp" />
-
-            <Button
-                android:layout_width="30dp"
+                android:layout_width="50dp"
                 android:layout_height="30dp"
                 android:text="완료"
                 android:id="@+id/btn_contentBoard_finish"
                 android:textSize="10dp"
                 android:visibility="invisible"
+                android:background="@drawable/rounded_edittext_conteant"
+                android:layout_alignTop="@+id/btn_contentBoard_edit"
+                android:layout_toLeftOf="@+id/btn_contentBoard_edit"
+                android:layout_toStartOf="@+id/btn_contentBoard_edit"
+                android:layout_marginLeft="10dp"
+                android:allowUndo="true"
+                android:textStyle="bold" />
+
+            <Button
+                android:layout_width="50dp"
+                android:layout_height="30dp"
+                android:text="수정"
+                android:id="@+id/btn_contentBoard_edit"
+                android:textSize="10dp"
+                android:visibility="invisible"
                 android:layout_alignTop="@+id/textView_contentBoard_title"
                 android:layout_alignRight="@+id/scrollView_contentBoard_scroll"
                 android:layout_alignEnd="@+id/scrollView_contentBoard_scroll"
-                android:background="#FFFFFF"
-                android:layout_marginLeft="10dp" />
+                android:background="@drawable/rounded_edittext_conteant"
+                android:layout_marginLeft="10dp"
+                android:textStyle="bold" />
 
         </RelativeLayout>
 

@@ -9,14 +9,27 @@ public class Contents {
     private String time;
     private String content;
     private int color;
+    private String sessionkey;
     public Contents( String title,  String time, String content, int color) {
         this.color = color;
         this.title = title;
         this.content = content;
         this.time = time;
     }
+    public Contents( int id, String content) {
+        this.id = id;
+        this.content = content;
+
+    }
     public Contents( int id, String title,  String time, String content, int color) {
         this.id = id;
+        this.title = title;
+        this.content = content;
+        this.time = time;
+        this.color = color;
+    }
+    public Contents( String sessionkey, String title,  String time, String content, int color) {
+        this.sessionkey = sessionkey;
         this.title = title;
         this.content = content;
         this.time = time;

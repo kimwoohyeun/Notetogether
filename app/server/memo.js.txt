@@ -1,0 +1,53 @@
+var express = require('express');
+var router = express.Router();
+var db = require('./database');
+router.post('/backup',function(req,res)
+{
+	req.accepts('application/json');
+	var list = req.body.contentlist;
+	var jsonList = JSON.parse(list);
+	if(jsonList.contents[0].sessionkey==="ERROR"){
+		res.send(JSON.stringify("Try Login"));
+		return;
+		}
+	else{
+		var length = jsonList.contents.length;
+		var key = jsonList.contents[0].sessionkey;
+		var id;
+		db.get().query('SELECT userId FROM session WHERE sessionKey = ?', key, function(err, rows){
+			if(err){
+				console.log(err);
+			}
+			else{
+				var string=JSON.stringify(rows);
+				var json =  JSON.parse(string);
+				id = json[0].userId;
+				for(var i =0;i<length;i++){
+					var contentsInfo = [
+						id,
+						jsonList.contents[i].title,
+						jsonList.contents[i].content,
+						jsonList.contents[i].time,
+						jsonList.contents[i].color
+					]
+					console.log(contentsInfo);
+					db.get().query('INSERT INTO backupmemo(userid, title, content, time, color) VALUES(?, ?, ?, ?, ?) ',contentsInfo,function(err,result){
+						if(err){	
+							console.log(err);	
+						}
+						else{
+							console.log("Back Up Success");
+							res.send(JSON.stringify("Back Up Success"));
+						}
+				
+					});		
+		
+				}	
+			}
+		
+	
+	});
+	}
+			
+});
+module.exports = router;

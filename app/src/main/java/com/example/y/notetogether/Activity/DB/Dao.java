@@ -2,8 +2,11 @@ package com.example.y.notetogether.Activity.DB;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.example.y.notetogether.Activity.Login.LoginResponse;
 
 import java.util.ArrayList;
 
@@ -76,4 +79,43 @@ public class Dao {
         cursor.close();
         return contents;
     }
+    public ArrayList<Contents> BackupContents() {
+        db = dbHelper.getReadableDatabase();
+
+        ArrayList<Contents> contents = new ArrayList<>();
+        String sessionkey;
+        String title;
+        String time;
+        String content;
+        int color;
+
+        // String sql = "SELECT * FROM contents;";
+        //Cursor cursor = db.rawQuery(sql, null);
+        Cursor cursor = db.query(
+        /* FROM */ "contents",
+        /* SELECT */ new String[]{ "*" },
+        /* WHERE */ null,
+        /* WHERE args */ null,
+        /* GROUP BY */ /*"color"*/null,
+        /* HAVING */ null,
+        /* ORDER BY */ "color,time ASC"
+        );
+
+        while (cursor.moveToNext()) {
+            sessionkey= getSessionKey();
+            title = cursor.getString(1);
+            time = cursor.getString(2);
+            content = cursor.getString(3);
+            color = cursor.getInt(4);
+            contents.add(new Contents(sessionkey, title, time, content,color));
+        }
+        cursor.close();
+        return contents;
+    }
+    public String getSessionKey() {
+        SharedPreferences pref = context.getSharedPreferences("pref", context.MODE_PRIVATE);
+        return pref.getString("SessionKey", "ERROR");
+    }
+
 }
+
